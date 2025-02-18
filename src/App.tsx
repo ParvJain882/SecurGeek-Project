@@ -14,6 +14,7 @@ import { CoursePlayer } from './components/CoursePlayer';
 function App() {
   const [showAuthForm, setShowAuthForm] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [expandedService, setExpandedService] = useState<number | null>(null);
   const { user, signOut } = useAuth();
   const [isSignUp, setIsSignUp] = useState(true);
 
@@ -31,20 +32,20 @@ function App() {
   const services = [
     {
       icon: <Shield className="w-12 h-12 text-blue-500" />,
-      title: "Cybersecurity Basics & Awareness",
-      description: "Master the fundamentals of cybersecurity, understand common threats, and learn essential practices to protect yourself and your organization in the digital world.",
+      title: "Cybersecurity Foundations",
+      description: "Learn cybersecurity on the go! Our audio training program covers fundamental security concepts, threat awareness, and best practices - perfect for busy professionals.",
       path: "/course/cybersecurity-basics"
     },
     {
       icon: <Target size={40} className="text-blue-600" />,
-      title: "Phishing Simulations",
-      description: "Real-world phishing scenarios to test and improve your team's threat detection abilities.",
+      title: "Social Engineering Defense Series",
+      description: "Audio lessons on recognizing and preventing social engineering attacks. Real-world scenarios and practical insights to protect against manipulation tactics.",
       path: "/course/phishing-simulations"
     },
     {
       icon: <BookOpen size={40} className="text-blue-600" />,
-      title: "Compliance Training",
-      description: "Role-specific training modules ensuring compliance with industry regulations and standards.",
+      title: "Compliance & Privacy Essentials",
+      description: "Stay compliant while commuting! Bite-sized audio lessons on data privacy regulations, compliance requirements, and industry standards.",
       path: "/course/compliance-training"
     }
   ];
@@ -83,50 +84,105 @@ function App() {
                 </nav>
                 
                 <div className="container mx-auto px-6 py-20">
-                  <div className="max-w-3xl">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                      Build Your Human Firewall
+                  <div className="max-w-4xl mx-auto text-center">
+                    <h1 className="text-5xl font-bold mb-6">
+                      Learn Cybersecurity Anywhere, Anytime
                     </h1>
-                    <p className="text-xl mb-8 text-blue-100">
-                      Transform your employees into your strongest security asset. Comprehensive cybersecurity training solutions 
-                      tailored for small and medium-scale enterprises.
+                    <p className="text-xl text-blue-100 mb-8">
+                      Transform your commute into a cybersecurity masterclass. 
+                      Quality audio courses designed for busy professionals.
                     </p>
-                    <button 
-                      onClick={() => setShowAuthForm(true)}
-                      className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-medium inline-flex items-center space-x-2 transition-all duration-200 hover:shadow-lg hover:scale-105"
-                    >
-                      <span>Sign In / Sign Up</span>
-                      <ArrowRight size={20} />
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <button 
+                        onClick={() => setShowAuthForm(true)}
+                        className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-medium 
+                          transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center justify-center"
+                      >
+                        Start Learning <ArrowRight className="ml-2" size={20} />
+                      </button>
+                      <Link 
+                        to="/course/preview"
+                        className="bg-white bg-opacity-10 hover:bg-opacity-20 px-8 py-3 rounded-lg font-medium 
+                          transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center justify-center"
+                      >
+                        Preview Lessons
+                      </Link>
+                    </div>
+                    <div className="mt-12 flex items-center justify-center space-x-8">
+                      <div className="text-center">
+                        <h3 className="text-3xl font-bold">100+</h3>
+                        <p className="text-blue-200">Audio Lessons</p>
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-3xl font-bold">15min</h3>
+                        <p className="text-blue-200">Per Episode</p>
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-3xl font-bold">24/7</h3>
+                        <p className="text-blue-200">Access</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </header>
 
+              {/* Features Section */}
+              <section className="py-20">
+                <div className="container mx-auto px-6">
+                  <h2 className="text-3xl font-bold text-center mb-12">Why Audio Learning?</h2>
+                  <div className="grid md:grid-cols-3 gap-8">
+                    <div className="text-center p-6">
+                      <Brain className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold mb-2">Learn While Mobile</h3>
+                      <p className="text-gray-600">
+                        Turn your commute, workout, or daily walk into a productive learning session
+                      </p>
+                    </div>
+                    <div className="text-center p-6">
+                      <Target className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold mb-2">Real-World Applications</h3>
+                      <p className="text-gray-600">
+                        Practical examples and actionable security strategies you can implement immediately
+                      </p>
+                    </div>
+                    <div className="text-center p-6">
+                      <BookOpen className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold mb-2">Bite-Sized Episodes</h3>
+                      <p className="text-gray-600">
+                        Concise 15-minute lessons designed for optimal retention and engagement
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
               {/* Services Section */}
               <section id="services" className="py-20">
                 <div className="container mx-auto px-6">
-                  <h2 className="text-3xl font-bold text-center mb-16">Our Training Programs</h2>
+                  <h2 className="text-3xl font-bold text-center mb-12">Training Programs</h2>
                   <div className="grid md:grid-cols-3 gap-8">
                     {services.map((service, index) => (
-                      <div key={index} className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                        <div className="mb-4">{service.icon}</div>
-                        <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                        <p className="text-gray-600 mb-4">{service.description}</p>
-                        {user ? (
-                          <Link 
-                            to={service.path}
-                            className="inline-block text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            Start Learning →
-                          </Link>
-                        ) : (
-                          <button
-                            onClick={() => setShowAuthForm(true)}
-                            className="inline-block text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            Sign in to Start Learning →
-                          </button>
-                        )}
+                      <div 
+                        key={index}
+                        className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200"
+                      >
+                        <div className="flex items-center space-x-4 mb-4">
+                          {service.icon}
+                          <h3 className="text-xl font-bold text-gray-800">{service.title}</h3>
+                        </div>
+                        <div 
+                          className={`overflow-hidden transition-all duration-300 ${
+                            expandedService === index ? 'max-h-96' : 'max-h-0'
+                          }`}
+                        >
+                          <p className="text-gray-600 mb-4">{service.description}</p>
+                        </div>
+                        <button
+                          onClick={() => setExpandedService(expandedService === index ? null : index)}
+                          className="text-blue-600 hover:text-blue-700 font-medium text-sm focus:outline-none"
+                        >
+                          {expandedService === index ? 'Show Less' : 'Know More'}
+                        </button>
                       </div>
                     ))}
                   </div>
