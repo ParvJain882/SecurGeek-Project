@@ -23,7 +23,6 @@ A brief description of your project.
    SUPABASE_URL=your-supabase-url
    BACKEND_URL=your-backend-url
    ```
-4. Hi 
 ## Usage
 Start the backend server:
 ```sh

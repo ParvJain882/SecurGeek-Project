@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export function AuthForm() {
@@ -12,6 +12,7 @@ export function AuthForm() {
     name: ''
   });
   const [emailSent, setEmailSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { signIn, signUp } = useAuth();
 
@@ -64,14 +65,24 @@ export function AuthForm() {
   }
 
   return (
-    <div className="max-w-md w-full mx-auto">
-      <h2 className="text-2xl font-bold text-center mb-6">
-        {isSignUp ? 'Create an Account' : 'Sign In'}
-      </h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="max-w-md w-full mx-auto bg-white p-8 rounded-xl shadow-sm">
+      <div className="flex flex-col items-center mb-8">
+        <h2 className="text-4xl font-bold text-gray-800 mb-2">
+          {isSignUp ? 'Create an account' : 'Sign In'}
+        </h2>
+        {isSignUp ? (
+          <p className="text-gray-600 text-lg">
+            Get started
+          </p>
+        ) : (
+          <p className="text-gray-600 text-lg">
+            Welcome Back!
+          </p>
+        )}
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
         {isSignUp && (
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+          <div className="relative">
             <input
               type="text"
               id="name"
@@ -79,13 +90,21 @@ export function AuthForm() {
               required={isSignUp}
               value={formData.name}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder=" "
+              className="peer w-full px-4 py-3 border-b-2 border-gray-200 focus:border-blue-500 outline-none transition-colors duration-200 bg-transparent caret-blue-500 placeholder-transparent"
             />
+            <label 
+              htmlFor="name" 
+              className="absolute left-4 -top-2.5 text-sm text-gray-500 transition-all duration-200 
+                peer-placeholder-shown:text-base peer-placeholder-shown:top-3.5 
+                peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-500"
+            >
+              Name
+            </label>
           </div>
         )}
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+        <div className="relative">
           <input
             type="email"
             id="email"
@@ -93,38 +112,77 @@ export function AuthForm() {
             required
             value={formData.email}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            placeholder=" "
+            className="peer w-full px-4 py-3 border-b-2 border-gray-200 focus:border-blue-500 outline-none transition-colors duration-200 bg-transparent caret-blue-500 placeholder-transparent"
           />
+          <label 
+            htmlFor="email" 
+            className="absolute left-4 -top-2.5 text-sm text-gray-500 transition-all duration-200 
+              peer-placeholder-shown:text-base peer-placeholder-shown:top-3.5 
+              peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-500"
+          >
+            Email
+          </label>
         </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+        <div className="relative">
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             id="password"
             name="password"
             required
             value={formData.password}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            placeholder=" "
+            className="peer w-full px-4 py-3 border-b-2 border-gray-200 focus:border-blue-500 outline-none transition-colors duration-200 bg-transparent caret-blue-500 placeholder-transparent pr-12"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+          >
+            {showPassword ? 
+              <EyeOff size={20} className="transition-colors duration-200" /> : 
+              <Eye size={20} className="transition-colors duration-200" />
+            }
+          </button>
+          <label 
+            htmlFor="password" 
+            className="absolute left-4 -top-2.5 text-sm text-gray-500 transition-all duration-200 
+              peer-placeholder-shown:text-base peer-placeholder-shown:top-3.5 
+              peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-500"
+          >
+            Password
+          </label>
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400"
+          className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium 
+            transition-all duration-200 hover:bg-blue-700 hover:shadow-lg hover:scale-[1.02] 
+            disabled:bg-blue-400 disabled:cursor-not-allowed disabled:hover:scale-100 
+            disabled:hover:shadow-none focus:outline-none focus:ring-2 focus:ring-blue-500 
+            focus:ring-offset-2 mt-8"
         >
-          {isLoading ? <Loader2 className="animate-spin" /> : (isSignUp ? 'Sign Up' : 'Sign In')}
+          {isLoading ? (
+            <Loader2 className="animate-spin mx-auto" />
+          ) : (
+            isSignUp ? 'Create Account' : 'Sign In'
+          )}
         </button>
 
-        <div className="text-center mt-4">
+        <div className="text-center mt-6">
           <button
             type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-sm text-blue-600 hover:text-blue-500"
+            className="text-sm text-gray-600 hover:text-blue-600 transition-colors duration-200 
+              focus:outline-none focus:underline"
           >
-            {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
+            {isSignUp ? 'Already have an account?' : 'Need an account?'}
+            <span className="ml-1 text-blue-600 font-medium">
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </span>
           </button>
         </div>
       </form>
