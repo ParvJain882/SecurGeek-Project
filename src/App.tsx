@@ -28,6 +28,27 @@ function App() {
     }
   };
 
+  const services = [
+    {
+      icon: <Shield className="w-12 h-12 text-blue-500" />,
+      title: "Cybersecurity Basics & Awareness",
+      description: "Master the fundamentals of cybersecurity, understand common threats, and learn essential practices to protect yourself and your organization in the digital world.",
+      path: "/course/cybersecurity-basics"
+    },
+    {
+      icon: <Target size={40} className="text-blue-600" />,
+      title: "Phishing Simulations",
+      description: "Real-world phishing scenarios to test and improve your team's threat detection abilities.",
+      path: "/course/phishing-simulations"
+    },
+    {
+      icon: <BookOpen size={40} className="text-blue-600" />,
+      title: "Compliance Training",
+      description: "Role-specific training modules ensuring compliance with industry regulations and standards.",
+      path: "/course/compliance-training"
+    }
+  ];
+
   return (
     <Router>
       <div className="min-h-screen bg-slate-50">
@@ -86,38 +107,22 @@ function App() {
                 <div className="container mx-auto px-6">
                   <h2 className="text-3xl font-bold text-center mb-16">Our Training Programs</h2>
                   <div className="grid md:grid-cols-3 gap-8">
-                    {[
-                      {
-                        icon: <Brain size={40} className="text-blue-600" />,
-                        title: "Security Awareness Training",
-                        description: "Interactive courses that teach employees to identify and prevent security threats in their daily work."
-                      },
-                      {
-                        icon: <Target size={40} className="text-blue-600" />,
-                        title: "Phishing Simulations",
-                        description: "Real-world phishing scenarios to test and improve your team's threat detection abilities."
-                      },
-                      {
-                        icon: <BookOpen size={40} className="text-blue-600" />,
-                        title: "Compliance Training",
-                        description: "Role-specific training modules ensuring compliance with industry regulations and standards."
-                      }
-                    ].map((service, index) => (
+                    {services.map((service, index) => (
                       <div key={index} className="bg-white p-8 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
                         <div className="mb-4">{service.icon}</div>
                         <h3 className="text-xl font-bold mb-3">{service.title}</h3>
-                        <p className="text-gray-600">{service.description}</p>
+                        <p className="text-gray-600 mb-4">{service.description}</p>
                         {user ? (
                           <Link 
-                            to="/course/security-awareness"
-                            className="mt-4 inline-block text-blue-600 hover:text-blue-700"
+                            to={service.path}
+                            className="inline-block text-blue-600 hover:text-blue-700 font-medium"
                           >
                             Start Learning →
                           </Link>
                         ) : (
                           <button
                             onClick={() => setShowAuthForm(true)}
-                            className="mt-4 inline-block text-blue-600 hover:text-blue-700"
+                            className="inline-block text-blue-600 hover:text-blue-700 font-medium"
                           >
                             Sign in to Start Learning →
                           </button>
