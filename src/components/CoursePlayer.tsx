@@ -683,9 +683,21 @@ export function CoursePlayer() {
 
         {/* Main Content */}
         <div className="flex-1 p-6 flex flex-col max-w-6xl mx-auto w-full">
-          <div className="relative bg-gradient-to-br from-gray-900 to-blue-900 aspect-video rounded-xl overflow-hidden mb-6 flex flex-col shadow-xl">
+          <div className="relative aspect-video rounded-xl overflow-hidden mb-6 flex flex-col shadow-xl">
+            {/* Background image */}
+            <div className="absolute inset-0">
+              <img 
+                src="/images/imagedummy.webp"
+                alt="Background"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Overlay for better contrast with controls */}
+            <div className="absolute inset-0 bg-black/30"></div>
+
             {/* Main display area */}
-            <div className="flex-1 flex items-center justify-center">
+            <div className="relative flex-1 flex items-center justify-center">
               {currentVideo ? (
                 <div className="w-full h-full flex items-center justify-center">
                   {isPlaying ? (
