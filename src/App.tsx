@@ -13,6 +13,7 @@ import { CoursePlayer } from './components/CoursePlayer';
 import { CoursesListing } from './components/CoursesListing';
 import { CourseDetail } from './components/CourseDetail';
 import { AuthGuard } from './components/AuthGuard';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function App() {
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -382,7 +383,9 @@ function App() {
             path="/course/:courseId" 
             element={
               <AuthGuard>
-                <CoursePlayer />
+                <ErrorBoundary>
+                  <CoursePlayer />
+                </ErrorBoundary>
               </AuthGuard>
             } 
           />
