@@ -26,9 +26,21 @@ interface AudioDurations {
 }
 
 const getAudioDuration = async (url: string): Promise<string> => {
-  return new Promise((resolve) => {
-    // Default duration if audio can't be loaded
-    resolve("15:00");
+  return new Promise((resolve, reject) => {
+    const audio = new Audio();
+    
+    audio.addEventListener('loadedmetadata', () => {
+      const minutes = Math.floor(audio.duration / 60);
+      const seconds = Math.floor(audio.duration % 60);
+      resolve(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    });
+
+    audio.addEventListener('error', () => {
+      console.error('Error loading audio:', url);
+      resolve('--:--');
+    });
+
+    audio.src = url;
   });
 };
 
@@ -55,6 +67,7 @@ export function CoursePlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [moduleDurations, setModuleDurations] = useState<{ [key: number]: number }>({});
+  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -88,21 +101,21 @@ export function CoursePlayer() {
           id: 4,
           title: "Common Cyber Risks Faced by SMEs",
           duration: "15:00",
-          videoUrl: "/audios/1.2.1.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 5,
           title: "Impact of Cyberattacks on Business Operations",
           duration: "15:00",
-          videoUrl: "/audios/1.2.2.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 6,
           title: "Case Studies of Cybersecurity Breaches",
           duration: "15:00",
-          videoUrl: "/audios/1.2.3.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         }
       ]
@@ -117,35 +130,35 @@ export function CoursePlayer() {
           id: 7,
           title: "Phishing Attacks",
           duration: "15:00",
-          videoUrl: "/audios/1.3.1.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 8,
           title: "Ransomware",
           duration: "15:00",
-          videoUrl: "/audios/1.3.2.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 9,
           title: "Social Engineering",
           duration: "15:00",
-          videoUrl: "/audios/1.3.3.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 10,
           title: "Malware & Viruses",
           duration: "15:00",
-          videoUrl: "/audios/1.3.4.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 11,
           title: "Insider Threats",
           duration: "15:00",
-          videoUrl: "/audios/1.3.5.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         }
       ]
@@ -160,21 +173,21 @@ export function CoursePlayer() {
           id: 12,
           title: "What is Sensitive Data?",
           duration: "15:00",
-          videoUrl: "/audios/1.4.1.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 13,
           title: "Why Data Privacy Matters",
           duration: "15:00",
-          videoUrl: "/audios/1.4.2.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 14,
           title: "How Cybercriminals Exploit Unprotected Data",
           duration: "15:00",
-          videoUrl: "/audios/1.4.3.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         }
       ]
@@ -189,28 +202,28 @@ export function CoursePlayer() {
           id: 15,
           title: "Using Secure Passwords & Authentication",
           duration: "15:00",
-          videoUrl: "/audios/1.5.1.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 16,
           title: "Recognizing & Avoiding Suspicious Content",
           duration: "15:00",
-          videoUrl: "/audios/1.5.2.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 17,
           title: "Safe Use of Business & Personal Devices",
           duration: "15:00",
-          videoUrl: "/audios/1.5.3.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         },
         {
           id: 18,
           title: "Reporting Security Incidents",
           duration: "15:00",
-          videoUrl: "/audios/1.5.4.mp3",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         }
       ]
@@ -235,9 +248,9 @@ export function CoursePlayer() {
     }
   }, []);
 
-  // Update third useEffect to include courseModules dependency
+  // Update the useEffect for fetching audio durations
   useEffect(() => {
-    const loadAllDurations = async () => {
+    const fetchDurations = async () => {
       const durations: AudioDurations = {};
       
       for (const module of courseModules) {
@@ -246,8 +259,8 @@ export function CoursePlayer() {
             const duration = await getAudioDuration(lesson.videoUrl);
             durations[lesson.videoUrl] = duration;
           } catch (error) {
-            console.error(`Error loading duration for ${lesson.videoUrl}:`, error);
-            durations[lesson.videoUrl] = '--:--';
+            console.error(`Failed to get duration for ${lesson.videoUrl}:`, error);
+            durations[lesson.videoUrl] = '00:00';
           }
         }
       }
@@ -255,25 +268,53 @@ export function CoursePlayer() {
       setAudioDurations(durations);
     };
 
-    loadAllDurations();
-  }, [courseModules]);
+    fetchDurations();
+  }, []);
 
-  // Add event listeners for audio
+  // Update the useEffect for audio handling
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.addEventListener('ended', () => {
-        setIsPlaying(false);
-      });
+    if (currentVideo && audioRef.current) {
+      // Clear previous audio
+      audioRef.current.pause();
+      audioRef.current.src = currentVideo;
+      audioRef.current.load();
+      
+      // Add proper event listeners with cleanup
+      const audio = audioRef.current;
+      
+      const handleTimeUpdate = () => {
+        setCurrentTime(audio.currentTime);
+        setDuration(audio.duration);
+      };
 
-      audioRef.current.addEventListener('play', () => {
-        setIsPlaying(true);
-      });
-
-      audioRef.current.addEventListener('pause', () => {
+      const handleEnded = () => {
         setIsPlaying(false);
-      });
+        setCurrentTime(0);
+      };
+
+      const handleLoadStart = () => setIsBuffering(true);
+      const handleCanPlay = () => setIsBuffering(false);
+      const handleError = (e: Event) => {
+        setError('Error loading audio file');
+        setIsBuffering(false);
+      };
+
+      audio.addEventListener('timeupdate', handleTimeUpdate);
+      audio.addEventListener('ended', handleEnded);
+      audio.addEventListener('loadstart', handleLoadStart);
+      audio.addEventListener('canplay', handleCanPlay);
+      audio.addEventListener('error', handleError);
+
+      // Cleanup function
+      return () => {
+        audio.removeEventListener('timeupdate', handleTimeUpdate);
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('loadstart', handleLoadStart);
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('error', handleError);
+      };
     }
-  }, [currentVideo]); // Add dependency on currentVideo
+  }, [currentVideo]);
 
   // Add a loading timeout handler
   useEffect(() => {
@@ -315,33 +356,19 @@ export function CoursePlayer() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Update the handleLessonClick function
   const handleLessonClick = async (lesson: Lesson) => {
+    if (currentLessonId === lesson.id) return;
+    
     try {
       setIsLoading(true);
       setError(null);
       
-      // Clean up previous audio
+      // Clean up existing audio
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.src = '';
+        audioRef.current.removeAttribute('src');
         audioRef.current.load();
-        audioRef.current = null;
-      }
-
-      setCurrentLessonId(lesson.id);
-      
-      // Construct the correct audio URL with error handling
-      const audioPath = lesson.videoUrl.startsWith('/') 
-        ? lesson.videoUrl 
-        : `/${lesson.videoUrl}`;
-      const fullAudioUrl = `${window.location.origin}${audioPath}`;
-      
-      console.log('Attempting to load audio from:', fullAudioUrl);
-
-      // Validate that the audio file exists
-      const fileExists = await validateAudioFile(fullAudioUrl);
-      if (!fileExists) {
-        throw new Error(`Audio file not found at ${audioPath}`);
       }
 
       // Create and configure new audio element
@@ -349,67 +376,29 @@ export function CoursePlayer() {
       audio.preload = 'auto';
       
       const loadPromise = new Promise((resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Audio loading timed out'));
-        }, 10000);
-
-        const onCanPlayThrough = () => {
-          clearTimeout(timeoutId);
-          if (audio.duration && !isNaN(audio.duration)) {
-            setDuration(audio.duration);
-            resolve(true);
-          }
-        };
-
-        const onError = (e: Event) => {
-          clearTimeout(timeoutId);
-          const audioElement = e.target as HTMLAudioElement;
-          console.error('Audio loading error:', audioElement.error);
-          reject(new Error(`Audio loading failed: ${audioElement.error?.message || 'Unknown error'}`));
-        };
-
-        audio.addEventListener('canplaythrough', onCanPlayThrough, { once: true });
-        audio.addEventListener('error', onError, { once: true });
+        audio.addEventListener('canplaythrough', resolve, { once: true });
+        audio.addEventListener('error', reject, { once: true });
       });
 
-      // Set source and begin loading
-      audio.src = fullAudioUrl;
-      audio.volume = volume;
-      audioRef.current = audio;
-
-      // Add playback event listeners
-      audio.addEventListener('timeupdate', () => {
-        if (!isNaN(audio.currentTime)) {
-          setCurrentTime(audio.currentTime);
-        }
-      });
-
-      audio.addEventListener('ended', () => {
-        setIsPlaying(false);
-        setCurrentTime(0);
-      });
-
-      audio.addEventListener('waiting', () => setIsBuffering(true));
-      audio.addEventListener('playing', () => setIsBuffering(false));
-
-      // Start loading the audio
-      audio.load();
+      audio.src = lesson.videoUrl;
+      
+      // Wait for audio to be ready
       await loadPromise;
       
-      console.log('Audio loaded successfully');
-      setIsLoading(false);
-
-    } catch (error: any) {
-      console.error('Error in handleLessonClick:', error);
-      setError(error.message || 'Unable to load audio. Please try again.');
+      audioRef.current = audio;
+      setCurrentVideo(lesson.videoUrl);
+      setCurrentLessonId(lesson.id);
       setIsPlaying(false);
-      if (audioRef.current) {
-        audioRef.current.src = '';
-        audioRef.current.load();
-        audioRef.current = null;
-      }
-    } finally {
+      setCurrentTime(0);
+      setDuration(audio.duration);
+      setIsAudioLoaded(true);
       setIsLoading(false);
+      
+    } catch (err) {
+      console.error('Audio loading error:', err);
+      setError('Failed to load audio file. Please check your internet connection and try again.');
+      setIsLoading(false);
+      setIsAudioLoaded(false);
     }
   };
 
@@ -465,19 +454,26 @@ export function CoursePlayer() {
     }
   };
 
-  const togglePlayPause = async () => {
+  // Update the play/pause handler
+  const handlePlayPause = () => {
     if (!audioRef.current) return;
-
+    
     try {
       if (isPlaying) {
         audioRef.current.pause();
       } else {
-        await audioRef.current.play();
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Playback failed:", error);
+            setError('Failed to play audio');
+          });
+        }
       }
       setIsPlaying(!isPlaying);
     } catch (error) {
-      console.error('Error toggling playback:', error);
-      setError('Playback failed. Please try again.');
+      console.error("Play/Pause error:", error);
+      setError('Playback error occurred');
     }
   };
 
@@ -485,88 +481,53 @@ export function CoursePlayer() {
   const renderMainPlayer = () => {
     if (!currentVideo) return null;
     
-    const currentLesson = courseModules
-      .flatMap(module => module.lessons)
-      .find(lesson => lesson.id === currentLessonId);
-
     return (
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-        <div className="flex flex-col space-y-2">
-          {/* Progress bar */}
-          <div className="relative w-full h-1 bg-gray-200 rounded cursor-pointer group"
-               onClick={(e) => {
-                 const rect = e.currentTarget.getBoundingClientRect();
-                 const percent = (e.clientX - rect.left) / rect.width;
-                 handleSeek(percent * duration);
-               }}>
-            <div 
-              className="absolute h-full bg-blue-500 rounded"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
-            />
-            <div className="absolute h-3 w-3 bg-blue-600 rounded-full -top-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                 style={{ left: `${(currentTime / duration) * 100}%`, transform: 'translateX(-50%)' }}
-            />
+      <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm p-4">
+        <audio
+          ref={audioRef}
+          src={currentVideo}
+          onLoadedData={() => setIsAudioLoaded(true)}
+          onError={() => {
+            setError('Failed to load audio');
+            setIsLoading(false);
+          }}
+          style={{ display: 'none' }}
+        />
+        
+        {/* Player controls */}
+        <div className="flex items-center justify-between text-white">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={handlePlayPause}
+              disabled={!isAudioLoaded}
+              className={`p-2 rounded-full ${!isAudioLoaded ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10'}`}
+            >
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
+            
+            {/* Time display */}
+            <div className="text-sm">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </div>
           </div>
           
-          {/* Time display */}
-          <div className="flex justify-between text-white/80 text-sm">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center justify-center space-x-4">
-            {/* Skip backward 10s */}
-            <button 
-              onClick={() => handleSkip(-10)}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
-              disabled={isLoading}
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M12 5v14l-7-7 7-7z" />
-              </svg>
-            </button>
-
-            {/* Play/Pause */}
-            <button 
-              onClick={togglePlayPause}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
-              disabled={!audioRef.current || isLoading}
-            >
-              {isPlaying ? (
-                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
-                </svg>
-              ) : (
-                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </button>
-
-            {/* Skip forward 10s */}
-            <button 
-              onClick={() => handleSkip(10)}
-              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
-              disabled={isLoading}
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M12 5v14l7-7-7-7z" />
-              </svg>
-            </button>
-
-            {/* Volume control */}
-            <div className="flex items-center space-x-2">
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className="w-20"
-              />
-            </div>
+          {/* Volume control */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={volume}
+              onChange={(e) => {
+                const newVolume = parseFloat(e.target.value);
+                setVolume(newVolume);
+                if (audioRef.current) {
+                  audioRef.current.volume = newVolume;
+                }
+              }}
+              className="w-20"
+            />
           </div>
         </div>
       </div>
@@ -591,6 +552,45 @@ export function CoursePlayer() {
       }
     };
   }, []);
+
+  // Update the audio event listeners useEffect
+  useEffect(() => {
+    if (!audioRef.current || !currentVideo) return;
+
+    const audio = audioRef.current;
+    
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setIsLoading(false);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
+
+    const handleError = () => {
+      setError('Error playing audio');
+      setIsLoading(false);
+      setIsPlaying(false);
+    };
+
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [currentVideo]);
 
   // Add loading state check
   if (isLoading) {
@@ -628,25 +628,30 @@ export function CoursePlayer() {
     if (!error) return null;
     
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-        <div className="bg-white p-6 rounded-lg max-w-md text-center">
-          <div className="text-red-500 mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold mb-2">Error Loading Audio</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => {
-              setError(null);
-              if (currentLessonId) {
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+          <h3 className="text-xl font-semibold text-red-600 mb-2">Error</h3>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setError(null)}
+              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => {
+                setError(null);
                 const lesson = courseModules
                   .flatMap(m => m.lessons)
                   .find(l => l.id === currentLessonId);
                 if (lesson) handleLessonClick(lesson);
-              }
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Retry
-          </button>
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
