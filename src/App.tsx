@@ -10,6 +10,8 @@ import { AuthForm } from './components/AuthForm';
 import { useAuth } from './contexts/AuthContext';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { CoursePlayer } from './components/CoursePlayer';
+import { CoursesListing } from './components/CoursesListing';
+import { CourseDetail } from './components/CourseDetail';
 
 function App() {
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -93,13 +95,13 @@ function App() {
                       Quality audio courses designed for busy professionals.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <button 
-                        onClick={() => setShowAuthForm(true)}
+                      <Link 
+                        to="/courses"
                         className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-medium 
                           transition-all duration-200 hover:shadow-lg hover:scale-105 flex items-center justify-center"
                       >
                         Start Learning <ArrowRight className="ml-2" size={20} />
-                      </button>
+                      </Link>
                       <Link 
                         to="/course/preview"
                         className="bg-white bg-opacity-10 hover:bg-opacity-20 px-8 py-3 rounded-lg font-medium 
@@ -350,6 +352,8 @@ function App() {
             </>
           } />
           
+          <Route path="/courses" element={<CoursesListing />} />
+          <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/course/:courseId" element={<CoursePlayer />} />
         </Routes>
       </div>

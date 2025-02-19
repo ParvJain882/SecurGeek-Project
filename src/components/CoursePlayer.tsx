@@ -59,15 +59,145 @@ export function CoursePlayer() {
         {
           id: 1,
           title: "Introduction to Cybersecurity",
-          duration: "15:00",
+          duration: "45:00",
           videoUrl: "/courses/cybersecurityBasics&Awareness/1.1.wav",
+          completed: false
+        }
+      ]
+    },
+    {
+      id: 2,
+      title: "Importance of Cybersecurity for SMEs",
+      duration: "45 mins",
+      completed: false,
+      lessons: [
+        {
+          id: 4,
+          title: "Common Cyber Risks Faced by SMEs",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.2.1.wav",
           completed: false
         },
         {
-          id: 2,
-          title: "Basic Security Principles",
-          duration: "12:30",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.2.wav",
+          id: 5,
+          title: "Impact of Cyberattacks on Business Operations",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.2.2.wav",
+          completed: false
+        },
+        {
+          id: 6,
+          title: "Case Studies of Cybersecurity Breaches",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.2.3.wav",
+          completed: false
+        }
+      ]
+    },
+    {
+      id: 3,
+      title: "Common Cyber Threats",
+      duration: "75 mins",
+      completed: false,
+      lessons: [
+        {
+          id: 7,
+          title: "Phishing Attacks",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.1.wav",
+          completed: false
+        },
+        {
+          id: 8,
+          title: "Ransomware",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.2.wav",
+          completed: false
+        },
+        {
+          id: 9,
+          title: "Social Engineering",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.3.wav",
+          completed: false
+        },
+        {
+          id: 10,
+          title: "Malware & Viruses",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.4.wav",
+          completed: false
+        },
+        {
+          id: 11,
+          title: "Insider Threats",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.5.wav",
+          completed: false
+        }
+      ]
+    },
+    {
+      id: 4,
+      title: "Understanding Data Sensitivity & Privacy",
+      duration: "45 mins",
+      completed: false,
+      lessons: [
+        {
+          id: 12,
+          title: "What is Sensitive Data?",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.4.1.wav",
+          completed: false
+        },
+        {
+          id: 13,
+          title: "Why Data Privacy Matters",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.4.2.wav",
+          completed: false
+        },
+        {
+          id: 14,
+          title: "How Cybercriminals Exploit Unprotected Data",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.4.3.wav",
+          completed: false
+        }
+      ]
+    },
+    {
+      id: 5,
+      title: "Cybersecurity Best Practices for Employees",
+      duration: "60 mins",
+      completed: false,
+      lessons: [
+        {
+          id: 15,
+          title: "Using Secure Passwords & Authentication",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.1.wav",
+          completed: false
+        },
+        {
+          id: 16,
+          title: "Recognizing & Avoiding Suspicious Content",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.2.wav",
+          completed: false
+        },
+        {
+          id: 17,
+          title: "Safe Use of Business & Personal Devices",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.3.wav",
+          completed: false
+        },
+        {
+          id: 18,
+          title: "Reporting Security Incidents",
+          duration: "15:00",
+          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.4.wav",
           completed: false
         }
       ]
