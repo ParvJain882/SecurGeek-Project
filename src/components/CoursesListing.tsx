@@ -1,6 +1,8 @@
 import React from 'react';
 import { Shield, Target, BookOpen } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const courses = [
   {
@@ -39,16 +41,29 @@ const courses = [
 ];
 
 export function CoursesListing() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleCourseClick = (e: React.MouseEvent, courseId: string) => {
+    if (!user) {
+      e.preventDefault();
+      toast.error('Please sign in to view course details');
+      navigate('/?auth=signin&autoOpen=true');
+      return;
+    }
+    navigate(`/courses/${courseId}`);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-6 py-12">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">Available Courses</h1>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {courses.map((course) => (
-            <Link 
+            <div 
               key={course.id}
-              to={`/courses/${course.id}`}
-              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden"
+              onClick={(e) => handleCourseClick(e, course.id)}
+              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden cursor-pointer"
             >
               <div className="p-6">
                 <div className="flex items-center justify-center mb-4">
@@ -61,7 +76,7 @@ export function CoursesListing() {
                   <span>{course.lessons} lessons</span>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

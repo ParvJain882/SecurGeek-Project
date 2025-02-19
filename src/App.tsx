@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Lightbulb, Users, ArrowRight, CheckCircle, Brain, Target, BookOpen, X } from 'lucide-react';
 import { ChatBot } from './components/ChatBot';
 import { BookingForm } from './components/BookingForm';
@@ -12,6 +12,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { CoursePlayer } from './components/CoursePlayer';
 import { CoursesListing } from './components/CoursesListing';
 import { CourseDetail } from './components/CourseDetail';
+import { AuthGuard } from './components/AuthGuard';
 
 function App() {
   const [showAuthForm, setShowAuthForm] = useState(false);
@@ -19,6 +20,17 @@ function App() {
   const [expandedService, setExpandedService] = useState<number | null>(null);
   const { user, signOut } = useAuth();
   const [isSignUp, setIsSignUp] = useState(true);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === 'signin') {
+      setShowAuthForm(true);
+      setIsSignUp(false);
+      
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
 
   const handleAuthClick = () => {
     if (user) {
@@ -229,13 +241,6 @@ function App() {
                   <p className="text-xl mb-8 max-w-2xl mx-auto">
                     Start building your human firewall today with our comprehensive security awareness training programs.
                   </p>
-                  <button 
-                    onClick={() => setShowAuthForm(true)}
-                    className="bg-blue-500 hover:bg-blue-600 px-8 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
-                  >
-                    <span>Schedule Training Demo</span>
-                    <ArrowRight size={20} />
-                  </button>
                 </div>
               </section>
 
@@ -289,9 +294,13 @@ function App() {
                   </div>
                   <div className="mt-12 pt-8 border-t border-gray-800">
                     <div className="text-center mb-4">
-                      <h4 className="text-white font-bold mb-2">Subscribe to Our Newsletter</h4>
-                      <p className="text-sm mb-4">Stay updated with the latest in cybersecurity training</p>
-                      <div className="max-w-md mx-auto">
+                      <h4 className="text-white font-bold mb-2 text-xl transform hover:scale-105 transition-transform duration-200">
+                        Subscribe to Our Newsletter
+                      </h4>
+                      <p className="text-sm mb-6 text-blue-300">
+                        Stay updated with the latest in cybersecurity training and get exclusive tips
+                      </p>
+                      <div className="max-w-md mx-auto transform hover:scale-102 transition-all duration-200 hover:shadow-lg rounded-lg">
                         <NewsletterForm />
                       </div>
                     </div>
@@ -352,9 +361,31 @@ function App() {
             </>
           } />
           
-          <Route path="/courses" element={<CoursesListing />} />
-          <Route path="/courses/:courseId" element={<CourseDetail />} />
-          <Route path="/course/:courseId" element={<CoursePlayer />} />
+          {/* Protect courses routes with AuthGuard */}
+          <Route 
+            path="/courses" 
+            element={
+              <AuthGuard>
+                <CoursesListing />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/courses/:courseId" 
+            element={
+              <AuthGuard>
+                <CourseDetail />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/course/:courseId" 
+            element={
+              <AuthGuard>
+                <CoursePlayer />
+              </AuthGuard>
+            } 
+          />
         </Routes>
       </div>
     </Router>

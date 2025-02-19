@@ -3,6 +3,7 @@ import { ChevronRight, ChevronDown, Play, CheckCircle, Shield } from 'lucide-rea
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 interface Module {
   id: number;
@@ -25,16 +26,20 @@ interface AudioDurations {
 }
 
 const getAudioDuration = async (url: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const audio = new Audio(url);
-    audio.onloadedmetadata = () => {
-      const minutes = Math.floor(audio.duration / 60);
-      const seconds = Math.floor(audio.duration % 60);
-      resolve(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-    };
-    audio.onerror = () => reject('Error loading audio');
-    audio.load();
+  return new Promise((resolve) => {
+    // Default duration if audio can't be loaded
+    resolve("15:00");
   });
+};
+
+const validateAudioFile = async (url: string): Promise<boolean> => {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch (error) {
+    console.error('Error validating audio file:', error);
+    return false;
+  }
 };
 
 export function CoursePlayer() {
@@ -47,8 +52,16 @@ export function CoursePlayer() {
   const [error, setError] = useState<string | null>(null);
   const [audioDurations, setAudioDurations] = useState<AudioDurations>({});
   const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [moduleDurations, setModuleDurations] = useState<{ [key: number]: number }>({});
 
-  // Move courseModules before the useEffects
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [volume, setVolume] = useState(1);
+
+  // Update the courseModules data to use the correct MP3 file path
   const courseModules: Module[] = [
     {
       id: 1,
@@ -59,8 +72,8 @@ export function CoursePlayer() {
         {
           id: 1,
           title: "Introduction to Cybersecurity",
-          duration: "45:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.1.wav",
+          duration: "15:00",
+          videoUrl: "/audios/1.1.mp3",
           completed: false
         }
       ]
@@ -75,21 +88,21 @@ export function CoursePlayer() {
           id: 4,
           title: "Common Cyber Risks Faced by SMEs",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.2.1.wav",
+          videoUrl: "/audios/1.2.1.mp3",
           completed: false
         },
         {
           id: 5,
           title: "Impact of Cyberattacks on Business Operations",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.2.2.wav",
+          videoUrl: "/audios/1.2.2.mp3",
           completed: false
         },
         {
           id: 6,
           title: "Case Studies of Cybersecurity Breaches",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.2.3.wav",
+          videoUrl: "/audios/1.2.3.mp3",
           completed: false
         }
       ]
@@ -104,35 +117,35 @@ export function CoursePlayer() {
           id: 7,
           title: "Phishing Attacks",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.1.wav",
+          videoUrl: "/audios/1.3.1.mp3",
           completed: false
         },
         {
           id: 8,
           title: "Ransomware",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.2.wav",
+          videoUrl: "/audios/1.3.2.mp3",
           completed: false
         },
         {
           id: 9,
           title: "Social Engineering",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.3.wav",
+          videoUrl: "/audios/1.3.3.mp3",
           completed: false
         },
         {
           id: 10,
           title: "Malware & Viruses",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.4.wav",
+          videoUrl: "/audios/1.3.4.mp3",
           completed: false
         },
         {
           id: 11,
           title: "Insider Threats",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.3.5.wav",
+          videoUrl: "/audios/1.3.5.mp3",
           completed: false
         }
       ]
@@ -147,21 +160,21 @@ export function CoursePlayer() {
           id: 12,
           title: "What is Sensitive Data?",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.4.1.wav",
+          videoUrl: "/audios/1.4.1.mp3",
           completed: false
         },
         {
           id: 13,
           title: "Why Data Privacy Matters",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.4.2.wav",
+          videoUrl: "/audios/1.4.2.mp3",
           completed: false
         },
         {
           id: 14,
           title: "How Cybercriminals Exploit Unprotected Data",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.4.3.wav",
+          videoUrl: "/audios/1.4.3.mp3",
           completed: false
         }
       ]
@@ -176,28 +189,28 @@ export function CoursePlayer() {
           id: 15,
           title: "Using Secure Passwords & Authentication",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.1.wav",
+          videoUrl: "/audios/1.5.1.mp3",
           completed: false
         },
         {
           id: 16,
           title: "Recognizing & Avoiding Suspicious Content",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.2.wav",
+          videoUrl: "/audios/1.5.2.mp3",
           completed: false
         },
         {
           id: 17,
           title: "Safe Use of Business & Personal Devices",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.3.wav",
+          videoUrl: "/audios/1.5.3.mp3",
           completed: false
         },
         {
           id: 18,
           title: "Reporting Security Incidents",
           duration: "15:00",
-          videoUrl: "/courses/cybersecurityBasics&Awareness/1.5.4.wav",
+          videoUrl: "/audios/1.5.4.mp3",
           completed: false
         }
       ]
@@ -245,6 +258,43 @@ export function CoursePlayer() {
     loadAllDurations();
   }, [courseModules]);
 
+  // Add event listeners for audio
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.addEventListener('ended', () => {
+        setIsPlaying(false);
+      });
+
+      audioRef.current.addEventListener('play', () => {
+        setIsPlaying(true);
+      });
+
+      audioRef.current.addEventListener('pause', () => {
+        setIsPlaying(false);
+      });
+    }
+  }, [currentVideo]); // Add dependency on currentVideo
+
+  // Add a loading timeout handler
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    if (isLoading) {
+      timeoutId = setTimeout(() => {
+        setIsLoading(false);
+        setError('Loading took too long. Please try again.');
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+      }, 10000); // 10 second timeout
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading]);
+
   // Add error state for invalid course
   if (!courseId) {
     return (
@@ -265,41 +315,341 @@ export function CoursePlayer() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleLessonClick = async (videoUrl: string, lessonId: number) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const handleLessonClick = async (lesson: Lesson) => {
     try {
-      // Update the URL to use the correct path
-      const audioUrl = `${window.location.origin}${videoUrl}`;
-      const response = await fetch(audioUrl);
+      setIsLoading(true);
+      setError(null);
       
-      if (!response.ok) {
-        throw new Error('Audio file not found');
+      // Clean up previous audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current.load();
+        audioRef.current = null;
       }
-      
-      setCurrentVideo(audioUrl);
-      setCurrentLessonId(lessonId);
-      
-      // Expand the module containing this lesson
-      const moduleId = courseModules.find(m => 
-        m.lessons.some(l => l.id === lessonId)
-      )?.id;
-      if (moduleId) setExpandedModule(moduleId);
 
-      if (!audioDurations[audioUrl]) {
-        const duration = await getAudioDuration(audioUrl);
-        setAudioDurations(prev => ({
-          ...prev,
-          [audioUrl]: duration
-        }));
+      setCurrentLessonId(lesson.id);
+      
+      // Construct the correct audio URL with error handling
+      const audioPath = lesson.videoUrl.startsWith('/') 
+        ? lesson.videoUrl 
+        : `/${lesson.videoUrl}`;
+      const fullAudioUrl = `${window.location.origin}${audioPath}`;
+      
+      console.log('Attempting to load audio from:', fullAudioUrl);
+
+      // Validate that the audio file exists
+      const fileExists = await validateAudioFile(fullAudioUrl);
+      if (!fileExists) {
+        throw new Error(`Audio file not found at ${audioPath}`);
       }
-    } catch (error) {
-      console.error('Error loading audio:', error);
-      setError('Failed to load audio file. Please try again.');
+
+      // Create and configure new audio element
+      const audio = new Audio();
+      audio.preload = 'auto';
+      
+      const loadPromise = new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Audio loading timed out'));
+        }, 10000);
+
+        const onCanPlayThrough = () => {
+          clearTimeout(timeoutId);
+          if (audio.duration && !isNaN(audio.duration)) {
+            setDuration(audio.duration);
+            resolve(true);
+          }
+        };
+
+        const onError = (e: Event) => {
+          clearTimeout(timeoutId);
+          const audioElement = e.target as HTMLAudioElement;
+          console.error('Audio loading error:', audioElement.error);
+          reject(new Error(`Audio loading failed: ${audioElement.error?.message || 'Unknown error'}`));
+        };
+
+        audio.addEventListener('canplaythrough', onCanPlayThrough, { once: true });
+        audio.addEventListener('error', onError, { once: true });
+      });
+
+      // Set source and begin loading
+      audio.src = fullAudioUrl;
+      audio.volume = volume;
+      audioRef.current = audio;
+
+      // Add playback event listeners
+      audio.addEventListener('timeupdate', () => {
+        if (!isNaN(audio.currentTime)) {
+          setCurrentTime(audio.currentTime);
+        }
+      });
+
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      });
+
+      audio.addEventListener('waiting', () => setIsBuffering(true));
+      audio.addEventListener('playing', () => setIsBuffering(false));
+
+      // Start loading the audio
+      audio.load();
+      await loadPromise;
+      
+      console.log('Audio loaded successfully');
+      setIsLoading(false);
+
+    } catch (error: any) {
+      console.error('Error in handleLessonClick:', error);
+      setError(error.message || 'Unable to load audio. Please try again.');
+      setIsPlaying(false);
+      if (audioRef.current) {
+        audioRef.current.src = '';
+        audioRef.current.load();
+        audioRef.current = null;
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add this function to update module durations
+  const updateModuleDuration = (lesson: Lesson, duration: number) => {
+    const module = courseModules.find(m => 
+      m.lessons.some(l => l.id === lesson.id)
+    );
+    
+    if (module) {
+      setModuleDurations(prev => {
+        const currentDuration = prev[module.id] || 0;
+        return {
+          ...prev,
+          [module.id]: currentDuration + duration
+        };
+      });
+    }
+  };
+
+  // Add this function to handle initial module loading
+  useEffect(() => {
+    if (courseModules.length > 0 && courseModules[0].lessons.length > 0) {
+      const firstLesson = courseModules[0].lessons[0];
+      handleLessonClick(firstLesson).catch(error => {
+        console.error('Error loading initial lesson:', error);
+        setError('Failed to load initial lesson. Please refresh the page.');
+      });
+    }
+  }, []); // Only run once on mount
+
+  const handleSeek = (time: number) => {
+    if (audioRef.current) {
+      const newTime = Math.max(0, Math.min(time, duration));
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleSkip = (seconds: number) => {
+    if (audioRef.current) {
+      const newTime = Math.max(0, Math.min(currentTime + seconds, duration));
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const handleVolumeChange = (newVolume: number) => {
+    if (audioRef.current) {
+      const volume = Math.max(0, Math.min(newVolume, 1));
+      audioRef.current.volume = volume;
+      setVolume(volume);
+    }
+  };
+
+  const togglePlayPause = async () => {
+    if (!audioRef.current) return;
+
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        await audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    } catch (error) {
+      console.error('Error toggling playback:', error);
+      setError('Playback failed. Please try again.');
+    }
+  };
+
+  // Update renderMainPlayer to use togglePlayPause
+  const renderMainPlayer = () => {
+    if (!currentVideo) return null;
+    
+    const currentLesson = courseModules
+      .flatMap(module => module.lessons)
+      .find(lesson => lesson.id === currentLessonId);
+
+    return (
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+        <div className="flex flex-col space-y-2">
+          {/* Progress bar */}
+          <div className="relative w-full h-1 bg-gray-200 rounded cursor-pointer group"
+               onClick={(e) => {
+                 const rect = e.currentTarget.getBoundingClientRect();
+                 const percent = (e.clientX - rect.left) / rect.width;
+                 handleSeek(percent * duration);
+               }}>
+            <div 
+              className="absolute h-full bg-blue-500 rounded"
+              style={{ width: `${(currentTime / duration) * 100}%` }}
+            />
+            <div className="absolute h-3 w-3 bg-blue-600 rounded-full -top-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                 style={{ left: `${(currentTime / duration) * 100}%`, transform: 'translateX(-50%)' }}
+            />
+          </div>
+          
+          {/* Time display */}
+          <div className="flex justify-between text-white/80 text-sm">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-center space-x-4">
+            {/* Skip backward 10s */}
+            <button 
+              onClick={() => handleSkip(-10)}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+              disabled={isLoading}
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 5v14l-7-7 7-7z" />
+              </svg>
+            </button>
+
+            {/* Play/Pause */}
+            <button 
+              onClick={togglePlayPause}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+              disabled={!audioRef.current || isLoading}
+            >
+              {isPlaying ? (
+                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 4h4v16H6zm8 0h4v16h-4z" />
+                </svg>
+              ) : (
+                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Skip forward 10s */}
+            <button 
+              onClick={() => handleSkip(10)}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors text-white"
+              disabled={isLoading}
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M12 5v14l7-7-7-7z" />
+              </svg>
+            </button>
+
+            {/* Volume control */}
+            <div className="flex items-center space-x-2">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="w-20"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Helper function to format time
+  const formatTime = (timeInSeconds: number): string => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Add cleanup effect
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = '';
+        audioRef.current.load();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Add loading state check
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading audio content...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Add error state UI
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow">
+          <div className="text-red-500 mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Course</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Add this function to render error state
+  const renderError = () => {
+    if (!error) return null;
+    
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+        <div className="bg-white p-6 rounded-lg max-w-md text-center">
+          <div className="text-red-500 mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold mb-2">Error Loading Audio</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              if (currentLessonId) {
+                const lesson = courseModules
+                  .flatMap(m => m.lessons)
+                  .find(l => l.id === currentLessonId);
+                if (lesson) handleLessonClick(lesson);
+              }
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -333,7 +683,13 @@ export function CoursePlayer() {
             <div className="flex-1 flex items-center justify-center">
               {currentVideo ? (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Play size={48} className="text-blue-400 opacity-80" />
+                  {isPlaying ? (
+                    <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center">
+                      <div className="w-4 h-4 bg-white rounded-full animate-pulse" />
+                    </div>
+                  ) : (
+                    <Play size={48} className="text-white/80" />
+                  )}
                 </div>
               ) : (
                 <div className="text-white flex flex-col items-center">
@@ -343,35 +699,7 @@ export function CoursePlayer() {
               )}
             </div>
             
-            {/* Audio Controls */}
-            {currentVideo && (
-              <div className="w-full bg-gray-900 bg-opacity-90 border-t border-blue-900">
-                <div className="px-6 py-3">
-                  <audio 
-                    className="w-full"
-                    controls
-                    autoPlay
-                    controlsList="nodownload"
-                    onContextMenu={(e) => e.preventDefault()}
-                    onError={(e) => {
-                      console.error('Audio error:', e);
-                      setError('Error playing audio file');
-                    }}
-                    onLoadStart={() => setIsLoading(true)}
-                    onLoadedData={() => setIsLoading(false)}
-                    src={currentVideo}
-                  >
-                    <source src={currentVideo} type="audio/wav" />
-                    Your browser does not support the audio element.
-                  </audio>
-                  {isLoading && (
-                    <div className="text-blue-400 text-sm mt-2 flex items-center justify-center">
-                      <span className="animate-pulse">Loading audio...</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {renderMainPlayer()}
           </div>
 
           <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
@@ -381,11 +709,7 @@ export function CoursePlayer() {
             </p>
           </div>
           
-          {error && (
-            <div className="bg-red-50 text-red-500 p-4 rounded-lg mt-4 text-center border border-red-100">
-              {error}
-            </div>
-          )}
+          {renderError()}
         </div>
       </div>
 
@@ -396,6 +720,8 @@ export function CoursePlayer() {
           <div className="space-y-4">
             {courseModules.map((module) => {
               const isActiveModule = module.lessons.some(lesson => lesson.id === currentLessonId);
+              const moduleDuration = formatTime(moduleDurations[module.id] || 0);
+              
               return (
                 <div 
                   key={module.id} 
@@ -414,7 +740,10 @@ export function CoursePlayer() {
                       ) : (
                         <div className="w-5 h-5 rounded-full border-2 border-blue-300" />
                       )}
-                      <span className="font-medium text-gray-800">{module.title}</span>
+                      <div>
+                        <span className="font-medium text-gray-800">{module.title}</span>
+                        <p className="text-sm text-gray-500">{moduleDuration}</p>
+                      </div>
                     </div>
                     {expandedModule === module.id ? (
                       <ChevronDown size={20} className="text-blue-500" />
@@ -427,11 +756,9 @@ export function CoursePlayer() {
                       {module.lessons.map((lesson) => (
                         <button
                           key={lesson.id}
-                          onClick={() => handleLessonClick(lesson.videoUrl, lesson.id)}
-                          className={`w-full p-4 flex items-center space-x-3 text-left transition-colors duration-200
-                            ${lesson.id === currentLessonId 
-                              ? 'bg-blue-100 hover:bg-blue-200' 
-                              : 'hover:bg-blue-50'}`}
+                          onClick={() => handleLessonClick(lesson)}
+                          className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors duration-200
+                            ${lesson.id === currentLessonId ? 'bg-blue-100 hover:bg-blue-200' : 'hover:bg-blue-50'}`}
                         >
                           {lesson.completed ? (
                             <CheckCircle className="text-green-500" size={16} />
